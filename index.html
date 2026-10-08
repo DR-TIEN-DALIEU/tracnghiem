@@ -526,12 +526,13 @@ let examDuration = 30 * 60;
 let pendingImport = null;
 
 const STORAGE_KEY = "myquiz_bank_v2";
+ const QUESTIONS_URL = "questions.json";
 
 /* ============================================================
    KHỞI TẠO
    ============================================================ */
-document.addEventListener("DOMContentLoaded", () => {
-  loadBank();
+document.addEventListener("DOMContentLoaded", async () => {
+  await loadBank();
   renderSubjectList();
   document.getElementById("file-input").addEventListener("change", handleFileInput);
   const modal = document.getElementById("exam-modal");
@@ -543,7 +544,8 @@ document.addEventListener("DOMContentLoaded", () => {
 /* ============================================================
    LƯU TRỮ
    ============================================================ */
-function loadBank() {
+async function loadBank() {
+  // 1. Ưu tiên dữ liệu đã lưu trong máy (nếu user đã import tay)
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
@@ -555,6 +557,22 @@ function loadBank() {
       }
     }
   } catch (e) { /* ignore */ }
+
+  // 2. Chưa có → thử tải questions.json từ server
+  try {
+    const res = await fetch(QUESTIONS_URL + "?v=" + Date.now());
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    if (data && typeof data === "object" && Object.keys(data).length > 0) {
+      QUESTION_BANK = data;
+      updateBankCount();
+      return;
+    }
+  } catch (err) {
+    console.warn("Không tải được questions.json, dùng DEFAULT_BANK:", err.message);
+  }
+
+  // 3. Dự phòng cuối cùng → dùng ngân hàng mẫu nhúng sẵn
   QUESTION_BANK = JSON.parse(JSON.stringify(DEFAULT_BANK));
   updateBankCount();
 }
