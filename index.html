@@ -566,7 +566,7 @@ function openExamSetup() {
   }
   const sizeInput = document.getElementById("exam-size");
   sizeInput.max = QUESTION_BANK.length;
-  sizeInput.value = Math.min(20, QUESTION_BANK.length);
+  sizeInput.value = Math.min(50, QUESTION_BANK.length);
   document.getElementById("exam-time").value = 30;
   document.getElementById("exam-modal").classList.add("active");
 }
