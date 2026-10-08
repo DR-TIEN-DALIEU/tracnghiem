@@ -1,5 +1,7 @@
-[
-  {
+{
+  "Môn Toán": {
+    "Phần 1": [
+    {
     "question": "Văn kiện Đại hội lần thứ XIV của Đảng đánh giá như thế nào về công tác quốc phòng, an ninh trong nhiệm kỳ qua?",
     "options": [
       "Xây dựng đồng bộ tiềm lực quốc phòng gắn với hiện đại hóa toàn diện các lực lượng vũ trang nhân dân.",
@@ -1000,3 +1002,5 @@
     "answer": 1
   }
 ]
+    }
+}
