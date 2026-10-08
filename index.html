@@ -193,6 +193,128 @@
   }
   .modal-actions { display: flex; gap: 10px; margin-top: 18px; }
   .modal-actions .btn { flex: 1; margin: 0; }
+/* Selector môn / phần */
+.selector-group {
+  text-align: left;
+  margin: 14px 0;
+  padding: 12px;
+  background: #f8fafd;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+}
+.selector-title {
+  font-weight: 700;
+  color: #1e6fd9;
+  margin-bottom: 8px;
+  font-size: .95rem;
+}
+.choice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+.choice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  transition: .15s;
+  font-size: .93rem;
+}
+.choice:hover { border-color: #1e6fd9; }
+.choice input[type=radio] { accent-color: #1e6fd9; }
+.choice input[type=radio]:checked + span { font-weight: 600; color: #1e6fd9; }
+.choice em { color: #888; font-style: normal; font-size: .85rem; }
+.empty {
+  padding: 10px;
+  color: #888;
+  font-size: .9rem;
+  font-style: italic;
+}
+
+/* Import form */
+.import-step {
+  margin: 12px 0;
+  padding: 10px;
+  background: #fbfdff;
+  border-radius: 8px;
+  border: 1px solid #e6eef8;
+}
+.import-label {
+  display: block;
+  font-size: .88rem;
+  font-weight: 700;
+  color: #1e6fd9;
+  margin-bottom: 8px;
+}
+.import-select,
+.import-input {
+  width: 100%;
+  padding: 9px 10px;
+  border: 2px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: .9rem;
+  background: #fff;
+  margin: 4px 0 10px 0;
+}
+.import-select:focus,
+.import-input:focus {
+  outline: none;
+  border-color: #1e6fd9;
+}
+.btn.tiny {
+  padding: 4px 10px;
+  font-size: .8rem;
+  margin: 0;
+  width: auto;
+}
+.btn.success {
+  background: #2e9e5b;
+  color: #fff;
+}
+
+/* Bank stats */
+.bank-stats {
+  margin-top: 16px;
+  text-align: left;
+}
+.bank-row {
+  padding: 10px 12px;
+  background: #f8fafd;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 8px;
+}
+.bank-row-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.bank-total {
+  color: #1e6fd9;
+  font-size: .85rem;
+  margin-left: auto;
+  margin-right: 8px;
+}
+.bank-parts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.part-tag {
+  background: #eaf2fd;
+  color: #1e6fd9;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: .82rem;
+}
 </style>
 </head>
 <body>
@@ -202,30 +324,119 @@
 
   <!-- ============ TRANG CHỦ ============ -->
   <section id="home-screen" class="screen active">
-    <div class="menu-card">
-      <h2>Chọn chế độ</h2>
-      <button class="btn primary" onclick="startPractice()">📖 Ôn tập (toàn bộ câu hỏi)</button>
-      <button class="btn danger" onclick="openExamSetup()">⏱️ Thi thử (30 phút)</button>
+  <div class="menu-card">
+    <h2>Chọn môn và phần</h2>
 
-      <div class="import-box">
-        <h3>📥 Import câu hỏi</h3>
+    <div class="selector-group">
+      <div class="selector-title">📚 Môn học</div>
+      <div id="subject-list" class="choice-list"></div>
+    </div>
+
+    <div class="selector-group">
+      <div class="selector-title">📂 Phần</div>
+      <div id="part-list" class="choice-list"></div>
+    </div>
+
+    <button class="btn primary" onclick="startPractice()">📖 Ôn tập</button>
+    <button class="btn danger" onclick="openExamSetup()">⏱️ Thi thử</button>
+
+    <!-- Import box -->
+    <div class="import-box">
+      <h3>📥 Import câu hỏi</h3>
+
+      <div class="import-step">
+        <label class="import-label">1️⃣ Chọn file</label>
         <input type="file" id="file-input" accept=".json,.xlsx,.xls,.csv" />
-        <div id="import-msg" class="import-msg"></div>
-        <div class="import-note">
-          <b>JSON:</b> mảng các object
-          <code>[{ "question": "...", "options": ["A","B","C","D"], "answer": 0, "explain": "..." }]</code><br>
-          <b>Excel/CSV:</b> dòng đầu là tiêu đề, các cột theo thứ tự:
-          <code>question | optionA | optionB | optionC | optionD | answer | explain</code><br>
-          · <code>answer</code>: số (0–3) hoặc chữ cái (A/B/C/D) — cột <code>explain</code> có thể bỏ trống.
+      </div>
+
+      <div class="import-step" id="import-mode-step" style="display:none;">
+        <label class="import-label">2️⃣ Chế độ import</label>
+        <label class="choice">
+          <input type="radio" name="import-mode" value="replace"
+                 onchange="onImportModeChange()" />
+          <span><b>🔄 Thay thế toàn bộ</b> <em>(xóa hết ngân hàng cũ)</em></span>
+        </label>
+        <label class="choice">
+          <input type="radio" name="import-mode" value="merge" checked
+                 onchange="onImportModeChange()" />
+          <span><b>➕ Thêm vào ngân hàng hiện tại</b></span>
+        </label>
+      </div>
+
+      <div class="import-step" id="import-target-step" style="display:none;">
+        <label class="import-label">3️⃣ Môn đích</label>
+        <label class="choice">
+          <input type="radio" name="import-subject-mode" value="auto" checked
+                 onchange="onImportSubjectModeChange()" />
+          <span><b>📌 Theo cột "subject" trong file</b> <em>(tự động)</em></span>
+        </label>
+        <label class="choice">
+          <input type="radio" name="import-subject-mode" value="existing"
+                 onchange="onImportSubjectModeChange()" />
+          <span><b>📚 Thêm vào môn có sẵn</b></span>
+        </label>
+        <select id="import-existing-subject" class="import-select"
+                onchange="onExistingSubjectChange()"></select>
+
+        <label class="choice">
+          <input type="radio" name="import-subject-mode" value="new"
+                 onchange="onImportSubjectModeChange()" />
+          <span><b>✨ Tạo môn mới</b></span>
+        </label>
+        <input type="text" id="import-new-subject" class="import-input"
+               placeholder="Nhập tên môn mới, VD: Môn 3"
+               oninput="onImportSubjectModeChange()" />
+
+        <div id="import-part-block" style="display:none;">
+          <label class="import-label">4️⃣ Phần đích</label>
+          <label class="choice">
+            <input type="radio" name="import-part-mode" value="auto" checked
+                   onchange="onImportPartModeChange()" />
+            <span><b>📌 Theo cột "part" trong file</b></span>
+          </label>
+          <label class="choice">
+            <input type="radio" name="import-part-mode" value="existing"
+                   onchange="onImportPartModeChange()" />
+            <span><b>📂 Thêm vào phần có sẵn</b></span>
+          </label>
+          <select id="import-existing-part" class="import-select"
+                  onchange="onImportPartModeChange()"></select>
+
+          <label class="choice">
+            <input type="radio" name="import-part-mode" value="new"
+                   onchange="onImportPartModeChange()" />
+            <span><b>✨ Tạo phần mới</b></span>
+          </label>
+          <input type="text" id="import-new-part" class="import-input"
+                 placeholder="Nhập tên phần mới, VD: Phần C"
+                 oninput="onImportPartModeChange()" />
         </div>
       </div>
+
+      <div class="import-step" id="import-confirm-step" style="display:none;">
+        <button class="btn success" onclick="applyImport()">✅ Xác nhận import</button>
+        <button class="btn" onclick="cancelImport()">Hủy</button>
+      </div>
+
+      <div id="import-msg" class="import-msg"></div>
+
+      <div class="import-note">
+        <b>JSON:</b> object phân cấp
+        <code>{ "Môn 1": { "Phần A": [{question, options, answer}] } }</code>
+        hoặc mảng phẳng có <code>subject</code> + <code>part</code>.<br>
+        <b>Excel/CSV:</b> cột:
+        <code>subject | part | question | optionA..D | answer | explain</code>
+      </div>
     </div>
+
+    <div id="bank-stats" class="bank-stats"></div>
     <p class="hint">
-      Số câu hỏi hiện có: <b id="bank-count">0</b>
+      Ngân hàng hiện có: <b id="bank-count">0</b>
       <button class="btn small" style="display:inline-block; width:auto; margin-left:8px; padding:4px 10px;"
               onclick="resetBank()">Khôi phục mẫu</button>
     </p>
-  </section>
+  </div>
+</section>
 
   <!-- ============ LÀM BÀI ============ -->
   <section id="quiz-screen" class="screen">
@@ -274,21 +485,31 @@
 /* ============================================================
    NGÂN HÀNG CÂU HỎI MẪU
    ============================================================ */
-const DEFAULT_BANK = [
-  { question: "Thủ đô của Việt Nam là gì?",
-    options: ["Hà Nội", "TP. Hồ Chí Minh", "Đà Nẵng", "Huế"],
-    answer: 0, explain: "Hà Nội là thủ đô từ năm 1945." },
-  { question: "2 + 2 bằng mấy?",
-    options: ["3", "4", "5", "6"], answer: 1 },
-  { question: "Ngôn ngữ lập trình nào chạy trên trình duyệt?",
-    options: ["Python", "Java", "JavaScript", "C++"], answer: 2 },
-  { question: "Nước nào có diện tích lớn nhất thế giới?",
-    options: ["Trung Quốc", "Mỹ", "Nga", "Canada"], answer: 2 },
-  { question: "HTML là viết tắt của?",
-    options: ["Hyper Text Markup Language", "High Text Machine Language",
-              "Hyper Tabular Markup Language", "None of these"],
-    answer: 0 }
-];
+const DEFAULT_BANK = {
+  "Môn 1": {
+    "Phần A": [
+      { question: "Thủ đô của Việt Nam là gì?",
+        options: ["Hà Nội", "TP. Hồ Chí Minh", "Đà Nẵng", "Huế"],
+        answer: 0, explain: "Hà Nội là thủ đô từ năm 1945." },
+      { question: "2 + 2 bằng mấy?",
+        options: ["3", "4", "5", "6"], answer: 1 }
+    ],
+    "Phần B": [
+      { question: "HTML là viết tắt của?",
+        options: ["Hyper Text Markup Language", "High Text Machine Language",
+                  "Hyper Tabular Markup Language", "None of these"],
+        answer: 0 }
+    ]
+  },
+  "Môn 2": {
+    "Phần A": [
+      { question: "Ngôn ngữ lập trình nào chạy trên trình duyệt?",
+        options: ["Python", "Java", "JavaScript", "C++"], answer: 2 },
+      { question: "Nước nào có diện tích lớn nhất thế giới?",
+        options: ["Trung Quốc", "Mỹ", "Nga", "Canada"], answer: 2 }
+    ]
+  }
+};
 
 /* ============================================================
    STATE
@@ -302,14 +523,19 @@ let timeLeft = 30 * 60;
 let examSubmitted = false;
 let examDuration = 30 * 60;
 
-const STORAGE_KEY = "myquiz_bank_v1";
+const STORAGE_KEY = "myquiz_bank_v2";
 
 /* ============================================================
    KHỞI TẠO
    ============================================================ */
 document.addEventListener("DOMContentLoaded", () => {
   loadBank();
+  renderSubjectList();
   document.getElementById("file-input").addEventListener("change", handleFileInput);
+  const modal = document.getElementById("exam-modal");
+  if (modal) modal.addEventListener("click", e => {
+    if (e.target.id === "exam-modal") closeExamSetup();
+  });
 });
 
 function loadBank() {
@@ -317,23 +543,95 @@ function loadBank() {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (parsed && typeof parsed === "object" && Object.keys(parsed).length > 0) {
         QUESTION_BANK = parsed;
         updateBankCount();
         return;
       }
     }
   } catch (e) { /* ignore */ }
-  QUESTION_BANK = [...DEFAULT_BANK];
+  QUESTION_BANK = JSON.parse(JSON.stringify(DEFAULT_BANK));
   updateBankCount();
+}
+
+function saveBank() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(QUESTION_BANK));
+  } catch (e) {
+    alert("Không thể lưu ngân hàng: " + e.message);
+  }
+}
+
+function resetBank() {
+  if (!confirm("Khôi phục ngân hàng mẫu? Toàn bộ dữ liệu đã import sẽ bị xóa.")) return;
+  QUESTION_BANK = JSON.parse(JSON.stringify(DEFAULT_BANK));
+  saveBank();
+  updateBankCount();
+  setImportMsg("Đã khôi phục ngân hàng mẫu.", "ok");
 }
 
 function saveBank() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(QUESTION_BANK)); } catch (e) {}
 }
 
+function getTotalQuestions() {
+  let total = 0;
+  for (const subject in QUESTION_BANK) {
+    for (const part in QUESTION_BANK[subject]) {
+      total += QUESTION_BANK[subject][part].length;
+    }
+  }
+  return total;
+}
+
 function updateBankCount() {
-  document.getElementById("bank-count").textContent = QUESTION_BANK.length;
+  const subjects = Object.keys(QUESTION_BANK).length;
+  const total = getTotalQuestions();
+  document.getElementById("bank-count").textContent = `${total} câu / ${subjects} môn`;
+  renderBankStats();
+}
+
+function renderBankStats() {
+  const box = document.getElementById("bank-stats");
+  if (!box) return;
+  box.innerHTML = "";
+  for (const subject in QUESTION_BANK) {
+    const row = document.createElement("div");
+    row.className = "bank-row";
+    let partsHtml = "";
+    let total = 0;
+    for (const part in QUESTION_BANK[subject]) {
+      const count = QUESTION_BANK[subject][part].length;
+      total += count;
+      partsHtml += `<span class="part-tag">${escapeHtml(part)}: ${count}</span>`;
+    }
+    row.innerHTML = `
+      <div class="bank-row-head">
+        <b>📚 ${escapeHtml(subject)}</b>
+        <span class="bank-total">${total} câu</span>
+        <button class="btn tiny danger" onclick="deleteSubject('${escapeAttr(subject)}')">Xóa</button>
+      </div>
+      <div class="bank-parts">${partsHtml || '<i>(trống)</i>'}</div>
+    `;
+    box.appendChild(row);
+  }
+}
+
+function deleteSubject(subject) {
+  if (!confirm(`Xóa toàn bộ môn "${subject}"?`)) return;
+  delete QUESTION_BANK[subject];
+  saveBank();
+  updateBankCount();
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[c]));
+}
+
+function escapeAttr(s) {
+  return String(s).replace(/'/g, "\\'").replace(/"/g, "&quot;");
 }
 
 function resetBank() {
@@ -353,6 +651,18 @@ function setImportMsg(text, type) {
   el.className = "import-msg" + (type ? " " + type : "");
 }
 
+/* ============================================================
+   IMPORT — 3 BƯỚC: CHỌN FILE → CHỌN CHẾ ĐỘ → XÁC NHẬN
+   ============================================================ */
+let pendingImport = null;
+
+function setImportMsg(text, type) {
+  const el = document.getElementById("import-msg");
+  if (!el) return;
+  el.textContent = text;
+  el.className = "import-msg" + (type ? " " + type : "");
+}
+
 function handleFileInput(e) {
   const file = e.target.files[0];
   if (!file) return;
@@ -365,8 +675,8 @@ function handleFileInput(e) {
     reader.onload = ev => {
       try {
         const data = JSON.parse(ev.target.result);
-        const parsed = parseJSONQuestions(data);
-        applyImported(parsed, file.name);
+        const grouped = parseJSONQuestions(data);
+        prepareImport(grouped, file.name);
       } catch (err) {
         setImportMsg("❌ JSON không hợp lệ: " + err.message, "err");
       }
@@ -379,145 +689,198 @@ function handleFileInput(e) {
         const wb = XLSX.read(ev.target.result, { type: "array" });
         const sheet = wb.Sheets[wb.SheetNames[0]];
         const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
-        const parsed = parseExcelQuestions(rows);
-        applyImported(parsed, file.name);
+        const grouped = parseExcelQuestions(rows);
+        prepareImport(grouped, file.name);
       } catch (err) {
-        setImportMsg("❌ Lỗi đọc file Excel/CSV: " + err.message, "err");
+        setImportMsg("❌ Lỗi đọc file: " + err.message, "err");
       }
     };
     reader.readAsArrayBuffer(file);
   } else {
-    setImportMsg("❌ Định dạng không hỗ trợ. Chỉ nhận .json, .xlsx, .xls, .csv", "err");
+    setImportMsg("❌ Chỉ nhận .json, .xlsx, .xls, .csv", "err");
   }
-  e.target.value = ""; // reset để chọn lại cùng file vẫn kích hoạt
+  e.target.value = "";
 }
 
-/* ---------- Parse JSON ---------- */
-function parseJSONQuestions(data) {
-  let arr = data;
-  // Hỗ trợ cả trường hợp { questions: [...] }
-  if (!Array.isArray(arr) && Array.isArray(data.questions)) arr = data.questions;
-  if (!Array.isArray(arr)) throw new Error("JSON phải là mảng hoặc có trường 'questions' là mảng.");
-
-  return arr.map((raw, i) => normalizeQuestion(raw, i));
-}
-
-/* ---------- Parse Excel/CSV ---------- */
-function parseExcelQuestions(rows) {
-  if (!rows || rows.length === 0) throw new Error("File không có dữ liệu.");
-
-  // Chuẩn hóa tên cột (lowercase, bỏ khoảng trắng)
-  return rows.map((row, i) => {
-    const r = {};
-    Object.keys(row).forEach(k => { r[k.toString().trim().toLowerCase()] = row[k]; });
-
-    const q        = r["question"] ?? r["câu hỏi"] ?? r["cauhoi"] ?? r["q"] ?? "";
-    const optA     = r["optiona"] ?? r["a"] ?? r["đáp án a"] ?? r["dap an a"] ?? "";
-    const optB     = r["optionb"] ?? r["b"] ?? r["đáp án b"] ?? r["dap an b"] ?? "";
-    const optC     = r["optionc"] ?? r["c"] ?? r["đáp án c"] ?? r["dap an c"] ?? "";
-    const optD     = r["optiond"] ?? r["d"] ?? r["đáp án d"] ?? r["dap an d"] ?? "";
-    const answer   = r["answer"] ?? r["đáp án"] ?? r["dap an"] ?? r["correct"] ?? "";
-    const explain  = r["explain"] ?? r["giải thích"] ?? r["giai thich"] ?? "";
-
-    const options = [optA, optB, optC, optD].map(v => String(v).trim()).filter(Boolean);
-
-    return normalizeQuestion({
-      question: String(q).trim(),
-      options,
-      answer,
-      explain: String(explain || "").trim()
-    }, i);
+function prepareImport(grouped, fileName) {
+  let count = 0;
+  const subjects = Object.keys(grouped);
+  subjects.forEach(s => {
+    for (const p in grouped[s]) count += grouped[s][p].length;
   });
-}
 
-/* ---------- Chuẩn hóa 1 câu hỏi ---------- */
-function normalizeQuestion(raw, index) {
-  if (!raw || typeof raw !== "object") {
-    throw new Error(`Câu ${index + 1}: không phải object hợp lệ.`);
-  }
-
-  // question có thể là "question" | "q" | "text"
-  const questionText = String(raw.question ?? raw.q ?? raw.text ?? "").trim();
-  if (!questionText) throw new Error(`Câu ${index + 1}: thiếu nội dung câu hỏi.`);
-
-  // options có thể là mảng, hoặc object {A,B,C,D}, hoặc các field optionA..D
-  let options = [];
-  if (Array.isArray(raw.options)) {
-    options = raw.options.map(o => String(o).trim()).filter(Boolean);
-  } else if (raw.options && typeof raw.options === "object") {
-    options = Object.values(raw.options).map(o => String(o).trim()).filter(Boolean);
-  } else {
-    const get = (...keys) => {
-      for (const k of keys) if (raw[k] != null && raw[k] !== "") return String(raw[k]).trim();
-      return "";
-    };
-    options = [
-      get("optionA", "a", "A"),
-      get("optionB", "b", "B"),
-      get("optionC", "c", "C"),
-      get("optionD", "d", "D")
-    ].filter(Boolean);
-  }
-
-  if (options.length < 2) {
-    throw new Error(`Câu ${index + 1}: cần ít nhất 2 đáp án.`);
-  }
-
-  // answer: số, chữ cái, hoặc nội dung đáp án
-  let answerIdx = -1;
-  const a = raw.answer;
-
-  if (typeof a === "number" && Number.isInteger(a)) {
-    answerIdx = a;
-  } else if (typeof a === "string") {
-    const s = a.trim();
-    if (/^[0-9]+$/.test(s)) {
-      answerIdx = parseInt(s, 10);
-    } else if (/^[A-Za-z]$/.test(s)) {
-      answerIdx = s.toUpperCase().charCodeAt(0) - 65;
-    } else {
-      // so khớp nội dung đáp án
-      answerIdx = options.findIndex(o => o.toLowerCase() === s.toLowerCase());
-    }
-  }
-
-  if (answerIdx < 0 || answerIdx >= options.length) {
-    throw new Error(`Câu ${index + 1}: 'answer' không hợp lệ (nhận được "${a}").`);
-  }
-
-  return {
-    question: questionText,
-    options,
-    answer: answerIdx,
-    explain: raw.explain ? String(raw.explain).trim() : ""
-  };
-}
-
-/* ---------- Áp dụng dữ liệu import ---------- */
-function applyImported(parsed, fileName) {
-  // Loại câu lỗi (parseJSONQuestions/parseExcelQuestions đã throw nếu lỗi cứng)
-  // Ở đây nếu muốn bỏ qua câu lỗi mềm thì ta đã throw ở trên → toàn bộ fail.
-  if (!parsed || parsed.length === 0) {
-    setImportMsg("❌ Không có câu hỏi hợp lệ trong file.", "err");
+  if (count === 0) {
+    setImportMsg("❌ File không có câu hỏi hợp lệ.", "err");
     return;
   }
 
-  const replace = QUESTION_BANK.length === 0
-    ? true
-    : confirm(`Đã đọc ${parsed.length} câu hỏi.\n\n` +
-              `OK = THAY THẾ toàn bộ ngân hàng hiện tại (${QUESTION_BANK.length} câu)\n` +
-              `Cancel = THÊM VÀO ngân hàng hiện tại`);
+  pendingImport = { grouped, fileName };
 
-  QUESTION_BANK = replace ? parsed : [...QUESTION_BANK, ...parsed];
-  saveBank();
-  updateBankCount();
+  document.getElementById("import-mode-step").style.display = "block";
+  document.getElementById("import-target-step").style.display = "block";
+  document.getElementById("import-confirm-step").style.display = "block";
+
+  renderImportSubjectOptions();
+  onImportModeChange();
 
   setImportMsg(
-    `✅ Đã ${replace ? "thay thế" : "thêm"} ${parsed.length} câu hỏi từ "${fileName}". ` +
-    `Tổng hiện tại: ${QUESTION_BANK.length} câu.`,
+    `📄 Đã đọc ${count} câu từ "${fileName}". Môn trong file: ${subjects.join(", ")}. ` +
+    `Chọn chế độ import bên trên rồi bấm "Xác nhận import".`,
     "ok"
   );
 }
+
+function onImportModeChange() {
+  const mode = document.querySelector('input[name="import-mode"]:checked')?.value;
+  const targetStep = document.getElementById("import-target-step");
+
+  if (mode === "replace") {
+    targetStep.style.display = "none";
+  } else {
+    targetStep.style.display = "block";
+    onImportSubjectModeChange();
+  }
+}
+
+function onImportSubjectModeChange() {
+  const mode = document.querySelector('input[name="import-subject-mode"]:checked')?.value;
+  const partBlock = document.getElementById("import-part-block");
+
+  if (mode === "auto") {
+    partBlock.style.display = "none";
+    return;
+  }
+
+  partBlock.style.display = "block";
+
+  if (mode === "existing") {
+    const subject = document.getElementById("import-existing-subject").value;
+    renderImportPartOptions(subject);
+  }
+}
+
+function onImportPartModeChange() { /* UI only */ }
+
+function onExistingSubjectChange() {
+  const subject = document.getElementById("import-existing-subject").value;
+  renderImportPartOptions(subject);
+}
+
+function renderImportSubjectOptions() {
+  const sel = document.getElementById("import-existing-subject");
+  sel.innerHTML = "";
+  const subjects = Object.keys(QUESTION_BANK);
+  if (subjects.length === 0) {
+    sel.innerHTML = '<option value="">(Chưa có môn nào)</option>';
+    return;
+  }
+  subjects.forEach(s => {
+    const opt = document.createElement("option");
+    opt.value = s;
+    opt.textContent = s;
+    sel.appendChild(opt);
+  });
+  renderImportPartOptions(subjects[0]);
+}
+
+function renderImportPartOptions(subject) {
+  const sel = document.getElementById("import-existing-part");
+  sel.innerHTML = "";
+  const parts = QUESTION_BANK[subject] ? Object.keys(QUESTION_BANK[subject]) : [];
+  if (parts.length === 0) {
+    sel.innerHTML = '<option value="">(Môn này chưa có phần nào)</option>';
+    return;
+  }
+  parts.forEach(p => {
+    const opt = document.createElement("option");
+    opt.value = p;
+    opt.textContent = p;
+    sel.appendChild(opt);
+  });
+}
+
+function applyImport() {
+  if (!pendingImport) {
+    setImportMsg("❌ Chưa có file nào được chọn.", "err");
+    return;
+  }
+
+  const mode = document.querySelector('input[name="import-mode"]:checked')?.value;
+
+  try {
+    if (mode === "replace") {
+      QUESTION_BANK = pendingImport.grouped;
+      saveBank();
+      updateBankCount();
+      renderSubjectList();
+      setImportMsg(`✅ Đã THAY THẾ toàn bộ ngân hàng bằng ${getTotalQuestions()} câu.`, "ok");
+    } else {
+      mergeImport(pendingImport.grouped);
+      renderSubjectList();
+    }
+  } catch (err) {
+    setImportMsg("❌ Lỗi: " + err.message, "err");
+    return;
+  }
+
+  cancelImport();
+}
+
+function mergeImport(grouped) {
+  const subjectMode = document.querySelector('input[name="import-subject-mode"]:checked')?.value;
+
+  // A. Theo cột subject/part trong file
+  if (subjectMode === "auto") {
+    let count = 0;
+    for (const subject in grouped) {
+      if (!QUESTION_BANK[subject]) QUESTION_BANK[subject] = {};
+      for (const part in grouped[subject]) {
+        if (!QUESTION_BANK[subject][part]) QUESTION_BANK[subject][part] = [];
+        QUESTION_BANK[subject][part].push(...grouped[subject][part]);
+        count += grouped[subject][part].length;
+      }
+    }
+    saveBank();
+    updateBankCount();
+    setImportMsg(`✅ Đã gộp ${count} câu theo cột subject/part trong file. Tổng: ${getTotalQuestions()} câu.`, "ok");
+    return;
+  }
+
+  // B. Gộp tất cả vào 1 môn cụ thể
+  let targetSubject;
+  if (subjectMode === "existing") {
+    targetSubject = document.getElementById("import-existing-subject").value;
+    if (!targetSubject) throw new Error("Chưa chọn môn có sẵn.");
+  } else if (subjectMode === "new") {
+    targetSubject = document.getElementById("import-new-subject").value.trim();
+    if (!targetSubject) throw new Error("Chưa nhập tên môn mới.");
+  } else {
+    throw new Error("Chế độ môn không hợp lệ.");
+  }
+
+  if (!QUESTION_BANK[targetSubject]) QUESTION_BANK[targetSubject] = {};
+
+  // Gom toàn bộ câu
+  const allQuestions = [];
+  for (const s in grouped) {
+    for (const p in grouped[s]) {
+      allQuestions.push(...grouped[s][p]);
+    }
+  }
+
+  const partMode = document.querySelector('input[name="import-part-mode"]:checked')?.value || "auto";
+  let targetPart;
+
+  if (partMode === "auto") {
+    targetPart = Object.keys(grouped)
+      .map(s => Object.keys(grouped[s]))
+      .flat()[0] || "Chung";
+  } else if (partMode === "existing") {
+    targetPart = document.getElementById("import-existing-part").value;
+    if (!targetPart) throw new Error("Chưa chọn phần có sẵn.");
+  } else if (partMode === "new") {
+    targetPart = document.getElementById("import-new-part").value.trim();
+    if (!target
 
 /* ============================================================
    CHUYỂN MÀN HÌNH
@@ -538,35 +901,142 @@ function backHome() {
 /* ============================================================
    ÔN TẬP
    ============================================================ */
-function startPractice() {
-  if (QUESTION_BANK.length === 0) {
-    alert("Ngân hàng câu hỏi trống. Vui lòng import câu hỏi trước.");
+function getSelectedSubject() {
+  return document.querySelector('input[name="subject"]:checked')?.value || "__all__";
+}
+
+function getSelectedPart(subject) {
+  const el = document.querySelector('input[name="part"]:checked');
+  return el ? el.value : "__all__";
+}
+
+function collectQuestions(subject, part) {
+  const result = [];
+  const subjects = subject === "__all__" ? Object.keys(QUESTION_BANK) : [subject];
+
+  subjects.forEach(sub => {
+    const parts = QUESTION_BANK[sub];
+    if (!parts) return;
+    const partNames = part === "__all__" ? Object.keys(parts) : [part];
+    partNames.forEach(p => {
+      if (parts[p]) result.push(...parts[p]);
+    });
+  });
+
+  return result;
+}
+
+function renderSubjectList() {
+  const box = document.getElementById("subject-list");
+  box.innerHTML = "";
+  const subjects = Object.keys(QUESTION_BANK);
+
+  if (subjects.length === 0) {
+    box.innerHTML = '<div class="empty">Chưa có môn nào. Vui lòng import câu hỏi.</div>';
+    renderPartList();
     return;
   }
+
+  const totalAll = getTotalQuestions();
+  box.innerHTML = `
+    <label class="choice">
+      <input type="radio" name="subject" value="__all__" checked
+             onchange="renderPartList()" />
+      <span><b>🎯 Tất cả môn</b> <em>(${totalAll} câu)</em></span>
+    </label>
+  `;
+
+  subjects.forEach(sub => {
+    const total = Object.values(QUESTION_BANK[sub])
+      .reduce((s, arr) => s + arr.length, 0);
+    const label = document.createElement("label");
+    label.className = "choice";
+    label.innerHTML = `
+      <input type="radio" name="subject" value="${escapeHtml(sub)}"
+             onchange="renderPartList()" />
+      <span>${escapeHtml(sub)} <em>(${total} câu)</em></span>
+    `;
+    box.appendChild(label);
+  });
+
+  renderPartList();
+}
+
+function renderPartList() {
+  const box = document.getElementById("part-list");
+  const subject = getSelectedSubject();
+  box.innerHTML = "";
+
+  if (subject === "__all__") {
+    box.innerHTML = '<div class="empty">Đã chọn tất cả môn — không cần chọn phần.</div>';
+    return;
+  }
+
+  const parts = QUESTION_BANK[subject];
+  if (!parts || Object.keys(parts).length === 0) {
+    box.innerHTML = '<div class="empty">Môn này chưa có phần nào.</div>';
+    return;
+  }
+
+  const totalPart = Object.values(parts).reduce((s, arr) => s + arr.length, 0);
+  box.innerHTML = `
+    <label class="choice">
+      <input type="radio" name="part" value="__all__" checked />
+      <span><b>📂 Tất cả phần</b> <em>(${totalPart} câu)</em></span>
+    </label>
+  `;
+
+  Object.keys(parts).forEach(part => {
+    const label = document.createElement("label");
+    label.className = "choice";
+    label.innerHTML = `
+      <input type="radio" name="part" value="${escapeHtml(part)}" />
+      <span>${escapeHtml(part)} <em>(${parts[part].length} câu)</em></span>
+    `;
+    box.appendChild(label);
+  });
+}
+function startPractice() {
+  const subject = getSelectedSubject();
+  const part = subject === "__all__" ? "__all__" : getSelectedPart();
+
+  const questions = collectQuestions(subject, part);
+
+  if (questions.length === 0) {
+    alert("Không có câu hỏi nào trong lựa chọn của bạn.");
+    return;
+  }
+
   currentMode = "practice";
-  currentQuestions = [...QUESTION_BANK];
+  currentQuestions = [...questions];
   userAnswers = new Array(currentQuestions.length).fill(null);
   examSubmitted = false;
 
-  document.getElementById("mode-label").textContent = "📖 Chế độ Ôn tập";
+  document.getElementById("mode-label").textContent =
+    `📖 Ôn tập — ${subject === "__all__" ? "Tất cả môn" : subject}` +
+    (part === "__all__" ? "" : ` / ${part}`) +
+    ` (${questions.length} câu)`;
+
   document.getElementById("timer").classList.add("hidden");
   document.getElementById("submit-btn").classList.add("hidden");
 
   renderQuestions();
   showScreen("quiz-screen");
 }
+   function openExamSetup() {
+  const subject = getSelectedSubject();
+  const part = subject === "__all__" ? "__all__" : getSelectedPart();
+  const questions = collectQuestions(subject, part);
 
-/* ============================================================
-   THI THỬ
-   ============================================================ */
-function openExamSetup() {
-  if (QUESTION_BANK.length === 0) {
-    alert("Ngân hàng câu hỏi trống. Vui lòng import câu hỏi trước.");
+  if (questions.length === 0) {
+    alert("Không có câu hỏi nào trong lựa chọn của bạn.");
     return;
   }
+
   const sizeInput = document.getElementById("exam-size");
-  sizeInput.max = QUESTION_BANK.length;
-  sizeInput.value = Math.min(50, QUESTION_BANK.length);
+  sizeInput.max = questions.length;
+  sizeInput.value = Math.min(20, questions.length);
+
   document.getElementById("exam-time").value = 30;
   document.getElementById("exam-modal").classList.add("active");
 }
@@ -585,11 +1055,15 @@ function shuffle(arr) {
 }
 
 function startExam() {
+  const subject = getSelectedSubject();
+  const part = subject === "__all__" ? "__all__" : getSelectedPart();
+  const pool = collectQuestions(subject, part);
+
   let size = parseInt(document.getElementById("exam-size").value, 10);
   let minutes = parseInt(document.getElementById("exam-time").value, 10);
 
   if (!size || size < 1) size = 1;
-  if (size > QUESTION_BANK.length) size = QUESTION_BANK.length;
+  if (size > pool.length) size = pool.length;
   if (!minutes || minutes < 1) minutes = 30;
 
   closeExamSetup();
@@ -597,8 +1071,7 @@ function startExam() {
   currentMode = "exam";
   examSubmitted = false;
 
-  // Chọn ngẫu nhiên + xáo trộn đáp án
-  currentQuestions = shuffle(QUESTION_BANK).slice(0, size).map(q => {
+  currentQuestions = shuffle(pool).slice(0, size).map(q => {
     const idx = q.options.map((_, i) => i);
     const shuffled = shuffle(idx);
     return {
@@ -612,7 +1085,11 @@ function startExam() {
   examDuration = minutes * 60;
   timeLeft = examDuration;
 
-  document.getElementById("mode-label").textContent = "⏱️ Chế độ Thi thử";
+  document.getElementById("mode-label").textContent =
+    `⏱️ Thi thử — ${subject === "__all__" ? "Tất cả môn" : subject}` +
+    (part === "__all__" ? "" : ` / ${part}`) +
+    ` (${currentQuestions.length} câu)`;
+
   document.getElementById("timer").classList.remove("hidden");
   document.getElementById("submit-btn").classList.remove("hidden");
 
